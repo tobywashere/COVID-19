@@ -1,0 +1,52 @@
+---
+title: "COVID-19 by Country"
+author: "Toby Huang"
+date: "March 22, 2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r casesByCountry, echo = F}
+suppressMessages(library(dplyr))
+data <- read.csv('~/Documents/Coursera/JohnsHopkinsDataScience/DevelopingDataProducts/Week3Assignment/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv')
+data <- select(data, Country.Region, 5:ncol(data)) %>%
+  group_by(Country.Region) %>%
+  summarise_all(sum) %>%
+  arrange_at(ncol(.), desc)
+nrows <- 14
+data <- data[1:nrows,]
+data <- as.data.frame(data)
+rownames(data) <- data$Country.Region
+data <- select(data, -Country.Region)
+suppressMessages(library(tidyr))
+covid_time_series <- as.data.frame(data) %>%
+  gather(date, cases) %>%
+  mutate(country = rep(rownames(data), ncol(data)))
+covid_time_series$date <- as.Date(covid_time_series$date, "X%m.%d.%y")
+suppressMessages(library(plotly))
+covid_time_series$country <- as.factor(covid_time_series$country)
+last_date <- covid_time_series$date[nrow(covid_time_series)]
+suppressMessages(library(RColorBrewer))
+mycolors <- colorRampPalette(brewer.pal(8, "Set2"))(nrows)
+```
+
+## Active Cases by Country
+
+Top 8 as of `r last_date`. Try zooming in the bottom right.
+
+```{r casesByCountryPlot}
+suppressMessages(plot_ly(covid_time_series, x = ~date, y = ~cases, color = ~country, type='scatter', mode='lines', colors = mycolors))
+```
+
+## Conclusions
+
+- The US has surpassed Italy and China with the most number of cases.
+- The growth curve is still exponential.
+- Stay home and stay safe!
+
+Thanks for your attention.
+
+Source: Johns Hopkins University
